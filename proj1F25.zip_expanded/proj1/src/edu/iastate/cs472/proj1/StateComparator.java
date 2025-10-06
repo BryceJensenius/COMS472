@@ -4,7 +4,7 @@ import java.util.Comparator;
 
 /**
  *  
- * @author
+ * @author Bryce Jensenius
  *
  */
 
@@ -30,13 +30,12 @@ public class StateComparator implements Comparator<State>
 	{
 		int[][] b1 = state.board;
 		int[][] b2 = state2.board;
-		for(int j = 0; j < b1.length; j++) {
-			for(int i = 0; i < b1[0].length; i++) {		
-				if(b1[j][i] > b2[j][i]) { // first state is greater
-					return 1;
-				}else if(b1[j][i] < b2[j][i]) { // first state is less
-					return -1;
-				}
+		for(int row = 0; row < b1.length; row++) {
+			for(int col = 0; col < b1[0].length; col++) {		
+				int cmp = Integer.compare(b1[row][col], b2[row][col]);
+                if (cmp != 0) {
+                    return cmp;
+                }
 			}
 		}
 	    return 0; // 2 states are equal on all values

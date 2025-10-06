@@ -7,7 +7,7 @@ import edu.iastate.cs472.proj1.State;
 
 /**
  *  
- * @author
+ * @author Bryce Jensenius
  *
  */
 
@@ -44,8 +44,7 @@ public class PuzzleSolver
 		for (String fileName : fileNames) {
 			State initialState = new State(fileName);
 			String solution = EightPuzzle.solve8Puzzle(initialState);
-			System.out.println("Solution for " + fileName + ":\n" + solution);
-			System.out.println("--------------------------------------------------\n" );
+			System.out.println(solution);
 		}
 	}
 

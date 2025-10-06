@@ -11,7 +11,7 @@ import edu.iastate.cs472.proj1.StateComparator;
 
 /**
  *  
- * @author
+ * @author Bryce Jensenius
  *
  */
 
@@ -236,11 +236,9 @@ public class State implements Cloneable, Comparable<State>
     			break;
     	}
         State s = new State(newBoard); // Create the new state with the modified board
-    	s.predecessor = this;
-        s.move = move;
+        s.predecessor = this;
+        s.move = m;
         s.numMoves = this.numMoves + 1;
-        s.previous = null;
-        s.next = null;
     	return s;
     }
 
@@ -359,7 +357,7 @@ public class State implements Cloneable, Comparable<State>
     public Object clone()
     {
         State c = new State(copyBoard());
-        c.move = this.move; // **ASK** Should move and numMoves be copied or set to null/0?
+        c.move = this.move;
         c.numMoves = this.numMoves;
     	return c; 
     }
@@ -442,7 +440,8 @@ public class State implements Cloneable, Comparable<State>
 		    };
 			for(int i = 0; i < 3; i++) { // Compare each board square with the goal state
 	    		for(int j = 0; j < 3; j++) {
-	    			if(goal[i][j] != board[i][j]) numMismatchedTiles++;
+	    			int val = goal[i][j];
+	    			if(val != 0 && val != board[i][j]) numMismatchedTiles++; // 0 Tile doesn't count as mismatched
 	    		}
 	    	}
 		}
@@ -460,25 +459,25 @@ public class State implements Cloneable, Comparable<State>
 	{
 		if(ManhattanDistance == -1){ // Need to compute its value
 			ManhattanDistance = 0;
-	        int[][] goalPos = { // coordinates of each value in goal state 
-                {1, 1}, // {x, y}, position of 0
-                {0, 0}, // position of 1...
-                {0, 1},
-                {0, 2},
-                {1, 2},
-                {2, 2},
-                {2, 1},
-                {2, 0},
-                {1, 0}
-            };
-			for(int i = 0; i < 3; i++) {
-	    		for(int j = 0; j < 3; j++) {
-	    			int square = board[i][j]; // the value at the current square
-	    			if(square != 0) { // empty tile doesn't count towards the missplaced
-	    				ManhattanDistance += Math.abs(i - goalPos[square][0]) + Math.abs(j - goalPos[square][1]);
-	    			}
-	    		}
-	    	}
+	        int[][] goalPos = { // coordinates of each value in goal state
+               {1, 1}, // {x, y}, position of 0
+               {0, 0}, // position of 1...
+               {0, 1},
+               {0, 2},
+               {1, 2},
+               {2, 2},
+               {2, 1},
+               {2, 0},
+               {1, 0}
+           };
+            for(int i = 0; i < 3; i++) {
+                for(int j = 0; j < 3; j++) {
+                    int square = board[i][j]; // the value at the current square
+                    if(square != 0) { // empty tile doesn't count towards the missplaced
+                        ManhattanDistance += Math.abs(i - goalPos[square][0]) + Math.abs(j - goalPos[square][1]);
+                    }
+                }
+            }
 		}
 		return ManhattanDistance;
 	}
@@ -500,7 +499,7 @@ public class State implements Cloneable, Comparable<State>
 	{
 		if(numSingleDoubleMoves == -1){
             numSingleDoubleMoves = 0;
-            int[][] goalPos = { // coordinates of each value in goal state 
+            int[][] goalPos = { // coordinates of each value in goal state
                 {1, 1}, // {x, y}, position of 0
                 {0, 0}, // position of 1...
                 {0, 1},
@@ -511,15 +510,19 @@ public class State implements Cloneable, Comparable<State>
                 {2, 0},
                 {1, 0}
             };
+            int numSingleMoves = 0;
             for(int i = 0; i < 3; i++) {
                 for(int j = 0; j < 3; j++) {
                     int square = board[i][j]; // the value at the current square
                     if(square != 0) { // empty tile doesn't count towards the missplaced
                         int dist = Math.abs(i - goalPos[square][0]) + Math.abs(j - goalPos[square][1]);
-                        numSingleDoubleMoves += (dist + 1) / 2; // Each double move counts as one, so divide distance by 2 rounding up
+                        numSingleMoves += dist; // Count manhattan distance or single moves for each square to get to goal
                     }
                 }
             }
+            // Divide by 2 since double moves change two tiles, essentially two single moves combined
+            // We can round up since if you are left with one single move, you still have to make a full move
+            numSingleDoubleMoves = (numSingleMoves + 1) / 2;
         }
         return numSingleDoubleMoves;
 	}

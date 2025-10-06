@@ -6,7 +6,7 @@ import edu.iastate.cs472.proj1.Move;
 import edu.iastate.cs472.proj1.Heuristic;
 /**
  *  
- * @author
+ * @author Bryce Jensenius
  *
  */
 
@@ -28,8 +28,6 @@ public class EightPuzzle
 	 */
 	public static String solve8Puzzle(State s0)
 	{
-		// TODO 
-		
 		// 1) If there exists no solution, return a message that starts with "No solution 
 		//    exists for the following initial state:" and follows with a blank line and 
 		//    then what would be the output from a call s0.toString(). See the end of 
@@ -44,11 +42,13 @@ public class EightPuzzle
 		
 		try{
 			for (int i = 0; i < 3; i++){
-				moves[i] = AStar(s0, h[i]); 
+				// Print time before and after each A* search and report duration
+				moves[i] = AStar(s0, h[i]);
 			}
 		}catch(IllegalStateException e){
 			return "No solution exists for the following initial state:\n\n" + s0.toString();
 		}
+		
 		// 3) Combine the three solution strings into one that would print out in the 
 		//    output format specified in Section 6 of the project description.
 		StringBuilder result = new StringBuilder();
@@ -71,12 +71,11 @@ public class EightPuzzle
 	 */
 	public static String AStar(State s0, Heuristic h)
 	{
-		// TODO 
 		if(s0 == null || h == null){
 			throw new IllegalArgumentException("Initial state or heuristic is null");
 		}
 		if(!s0.solvable()){
-			throw new IllegalArgumentException("No solution exists for the following initial state:\n\n" + s0.toString());
+			throw new IllegalStateException("No solution exists for the following initial state:\n\n" + s0.toString());
 		}
 
 		// Initialize the two lists used by the algorithm. 
@@ -84,18 +83,18 @@ public class EightPuzzle
 		OrderedStateList CLOSE = new OrderedStateList(h, false);
 		State.heu = h;
 		OPEN.addState(s0);
-		s0.cost(); // Estimate the cost of the initial state
 		
 		// Implement the algorithm described in Section 3 to solve the puzzle. 
 		// Once a goal state s is reached, call solutionPath(s) and return the solution string. 
-		while(OPEN.size() != 0){
+		while(OPEN.size() > 0){
 			State openS = OPEN.remove();
 			CLOSE.addState(openS);
 			if(openS.isGoalState()){
 				return solutionPath(openS);
 			}
 			for(Move m : Move.values()){
-				if(h != Heuristic.DoubleMoveHeuristic && (m == Move.DBL_LEFT || m == Move.DBL_RIGHT || m == Move.DBL_UP || m == Move.DBL_DOWN)){
+				if(h != Heuristic.DoubleMoveHeuristic
+						&& (m == Move.DBL_LEFT || m == Move.DBL_RIGHT || m == Move.DBL_UP || m == Move.DBL_DOWN)){
 					continue; // Skip double moves for first two heuristics
 				}
 
@@ -105,22 +104,21 @@ public class EightPuzzle
 				} catch(IllegalArgumentException e){
 					continue; // Skip illegal moves
 				}
+				
+				// Don't go back to the parent/predecessor again
+				if (openS.predecessor != null && successor.equals(openS.predecessor)) continue;
 
-				// **ASK** This part was worded poorly, I don't understand what it is asking for
 				if(CLOSE.findState(successor) == null){ // Not in CLOSE
 					State existing = OPEN.findState(successor); // See if we have opened it before
 					if(existing == null){ // Not in OPEN or CLOSE so add to OPEN
-						successor.cost(); // Update cost
 						OPEN.addState(successor);
-					}else{ // Must be in OPEN
-						if(existing.compareTo(successor) == 1){ // Found a better path to opened state
-							OPEN.removeState(existing); // Remove the existing state
-							OPEN.addState(successor); // Add the new state
-						}
+					}else if(successor.compareTo(existing) < 0){ // Must be in OPEN
+						OPEN.removeState(existing); // Remove the existing state
+						OPEN.addState(successor); // Add the new state
 					}
 				}else{ // Must be in CLOSE
 					State existing = CLOSE.findState(successor); // Get the existing state
-					if(existing.compareTo(successor) == 1){ // Found a better path to closed state
+					if(successor.compareTo(existing) < 0){ // Found a better path to closed state
 						CLOSE.removeState(existing); // Remove from CLOSE
 						OPEN.addState(successor); // Add to OPEN
 					}
@@ -154,32 +152,35 @@ public class EightPuzzle
 		StringBuilder result = new StringBuilder();
 		int moves = 0;
 		State current = goal;
-		while(current.previous != null){ // COntinue until reaching initial state
+		// Count moves by following the predecessor links (the path from initial to goal)
+		while(current.predecessor != null){
 			moves++;
-			current = current.previous; // Move to the previous state
+			current = current.predecessor;
 		}
+		result.append("\n" + moves);
 		// output in the format "9 moves in total (heuristic: number of mismatached tiles)"
 		switch(State.heu){
 			case TileMismatch:
-				result.append(moves + " moves in total (heuristic: number of mismatched tiles)\n");
+				result.append(" moves in total (heuristic: number of mismatched tiles)\n\n");
 				break;
 			case ManhattanDist:
-				result.append(moves + " moves in total (heuristic: Manhattan distance)\n");
+				result.append(" moves in total (heuristic: the Manhattan distance)\n\n");
 				break;
 			case DoubleMoveHeuristic:
-				result.append(moves + " moves in total (heuristic: double moves allowed)\n");
+				result.append(" moves in total (heuristic: double moves allowed)\n\n");
 				break;
 			default:
-				result.append(moves + " moves in total (heuristic: unknown)\n");
+				result.append(" moves in total (heuristic: unknown)\n\n");
 				break;
 		}
 		
 		// Now we need to build the path in reverse order
 		StringBuilder path = new StringBuilder();
 		current = goal;
-		while(current.previous != null){
-			path.insert(0, "\n" + current.toString() + "\n\n" + current.move + "\n"); // Prepend the current state and move
-			current = current.previous; // Move to the previous state
+		// Build the path by walking predecessor links backwards and prepending each step
+		while(current.predecessor != null){
+			path.insert(0, "\n" + current.move + "\n\n" + current.toString() + "\n"); // Prepend the current state and move
+			current = current.predecessor; // Move to the predecessor state
 		}
 		path.insert(0, current.toString() + "\n"); // Add the initial state at the start
 		result.append(path.toString());

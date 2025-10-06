@@ -3,6 +3,7 @@ package edu.iastate.cs472.proj1;
 /**
  * 
  * Different moves on the board
+ * @author Bryce Jensenius
  *
  */
 public enum Move 

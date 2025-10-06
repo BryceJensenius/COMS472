@@ -5,7 +5,7 @@ import java.util.NoSuchElementException;
 
 /**
  *  
- * @author
+ * @author Bryce Jensenius
  *
  */
 
@@ -121,7 +121,7 @@ public class OrderedStateList
 		  if(findState(s) == null){ // Check if s is on the list
 			  throw new IllegalStateException("State is not on the list");
 		  }
-		  // Update poitners to skip over s
+		  // Update pointers to skip over s
 		  s.previous.next = s.next;
 		  s.next.previous = s.previous;
 		  size--;
