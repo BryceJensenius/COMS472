@@ -158,7 +158,7 @@ public class EightPuzzle
 			current = current.predecessor;
 		}
 		result.append("\n" + moves);
-		// output in the format "9 moves in total (heuristic: number of mismatached tiles)"
+		// output in the format "9 moves in total (heuristic: number of mismatched tiles)"
 		switch(State.heu){
 			case TileMismatch:
 				result.append(" moves in total (heuristic: number of mismatched tiles)\n\n");

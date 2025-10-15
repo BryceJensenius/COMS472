@@ -68,7 +68,7 @@ public class State implements Cloneable, Comparable<State>
     public State(int[][] board) throws IllegalArgumentException
     {
     	// Check that the board has correct number of rows
-    	if(board == null || board.length != 3 || board[0].length != 3) throw new IllegalArgumentException("Board must have 3 rows");
+    	if(board == null || board.length != 3 || board[0].length != 3) throw new IllegalArgumentException("Board must have 3 rows ");
     	
     	// Check each row has 3 columns
         for (int i = 0; i < board.length; i++) {
@@ -417,9 +417,7 @@ public class State implements Cloneable, Comparable<State>
     {
         int c1 = cost();
         int c2 = s.cost();
-        if(c1 < c2) return -1;
-        if(c1 == c2) return 0;
-        return 1;
+        return Integer.compare(c1, c2);
     }
     
 
