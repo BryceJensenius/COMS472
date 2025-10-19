@@ -65,6 +65,14 @@ public class CheckersMove {
         rows.add(r);
         cols.add(c);
     }
+
+    public ArrayList<Integer> getRows() {
+        return rows;
+    }
+    
+    public ArrayList<Integer> getCols() {
+        return cols;
+    }
     
     //get a copy of this move
     @Override

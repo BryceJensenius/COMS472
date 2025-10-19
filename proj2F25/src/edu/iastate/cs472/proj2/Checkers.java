@@ -58,11 +58,11 @@ public class Checkers extends JPanel {
         window.setResizable(false);
         window.setVisible(true);
         
-        while(true) {
-        	// Get Users move from GUI
-        	// Update Board with human players move
-        	// Update board with agents move from the search they are using
-        }
+//        while(false) {
+//        	// Get Users move from GUI
+//        	// Update Board with human players move
+//        	// Update board with agents move from the search they are using
+//        }
     }
 
     private JButton newGameButton;  // Button for starting a new game.
@@ -115,9 +115,6 @@ public class Checkers extends JPanel {
         resignButton.setBounds(400, 120, 120, 30);
         message.setBounds(140, 200, 350, 30);
         premessage.setBounds(40, 200, 350, 30);
-
-        
-        
     } // end constructor
  
     /**

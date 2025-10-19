@@ -7,7 +7,17 @@ import java.util.ArrayList;
  */
 public class MCNode<E>
 {
-	E data;
+	static final int
+            EMPTY = 0,
+            RED = 1,
+            RED_KING = 2,
+            BLACK = 3,
+            BLACK_KING = 4;
+
+	E data; // Game Configuration at this node
+	int playouts; // Total plaoyouts from this node
+	int wins; // Number of wins for this player from this node
+	int player; // Player who made the move to this node
 	ArrayList<MCNode<E>> children;
 	public MCNode(E data) {
 		this.data = data;

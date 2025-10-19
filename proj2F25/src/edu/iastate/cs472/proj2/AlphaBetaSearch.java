@@ -43,6 +43,20 @@ public class AlphaBetaSearch extends AdversarialSearch {
         // Return the move for the current state.
         // Here, we simply return the first legal move for demonstration.
         return legalMoves[0];
+        // CheckersData boardData = new CheckersData();
+        // boardData.board = board.board;
+        // int alpha = Integer.MIN_VALUE;
+        // int beta = Integer.MAX_VALUE;
+        // CheckersMove bestMove = null;
+        // for (CheckersMove move : legalMoves) {
+        //     // Make the move on a copy of the board
+        //     boardData.makeMove(move);
+        //     int value = minValue(newBoard, alpha, beta, 3); // depth can be adjusted
+        //     if (value > alpha) {
+        //         alpha = value;
+        //         bestMove = move;
+        //     }
+        // }
     }
     
     // TODO

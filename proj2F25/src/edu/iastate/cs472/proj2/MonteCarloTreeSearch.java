@@ -42,6 +42,7 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
         // Return the move for the current state.
         // Here, we simply return the first legal move for demonstration.
         return legalMoves[0];
+        // CheckersMove selectedMove = selection(legalMoves);
     }
     
     // TODO
@@ -53,19 +54,21 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
     // child-sibling tree already implemented in the two classes CSTree and CSNode (which  
     // you may feel free to modify).  If you decide not to use the child-sibling tree, simply 
     // remove these two classes. 
-    private CheckersMove selection() {
+    private CheckersMove selection(CheckersMove[] legalMoves) {
     	// Imlement using UCB Formula
+        
+        return null;
     }
     
-    private CheckersMove[] expansion() {
+    // private CheckersMove[] expansion() {
     	
-    }
+    // }
     
-    private CheckersMove simulation() {
+    // private CheckersMove simulation() {
     	
-    }
+    // }
 
-    private CheckersMove back_propagation(){
+    // private CheckersMove back_propagation(){
     	
-    }
+    // }
 }
