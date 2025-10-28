@@ -12,7 +12,8 @@ package edu.iastate.cs472.proj2;
  * move at current state.
 */
 public class AlphaBetaSearch extends AdversarialSearch {
-
+	int maxDepth = 10; // Max depth or moves to explore before using heuristic
+	
     /**
      * The input parameter legalMoves contains all the possible moves.
      * It contains four integers:  fromRow, fromCol, toRow, toCol
@@ -37,29 +38,139 @@ public class AlphaBetaSearch extends AdversarialSearch {
         // 4 - black king
         System.out.println(board);
         System.out.println();
-
-        // TODO 
-        
-        // Return the move for the current state.
+  
         // Here, we simply return the first legal move for demonstration.
-        return legalMoves[0];
-        // CheckersData boardData = new CheckersData();
-        // boardData.board = board.board;
-        // int alpha = Integer.MIN_VALUE;
-        // int beta = Integer.MAX_VALUE;
-        // CheckersMove bestMove = null;
-        // for (CheckersMove move : legalMoves) {
-        //     // Make the move on a copy of the board
-        //     boardData.makeMove(move);
-        //     int value = minValue(newBoard, alpha, beta, 3); // depth can be adjusted
-        //     if (value > alpha) {
-        //         alpha = value;
-        //         bestMove = move;
-        //     }
-        // }
+        int alpha = Integer.MIN_VALUE;
+        int beta = Integer.MAX_VALUE;
+        CheckersMove bestMove = null;
+        
+        for (CheckersMove move : legalMoves) { // Evaluate for every move
+            CheckersData newBoardData = new CheckersData();
+            newBoardData.board = copyBoard(this.board.board);
+            newBoardData.makeMove(move); // Perform this initial move
+            int value = maxValue(newBoardData, alpha, beta, 1); // Recursive MIN call
+            if (value > alpha) { // Keep the largest alpha found
+                alpha = value;
+                bestMove = move;
+                System.out.println("Alpha " + alpha);
+            }
+        }
+        return bestMove; // Return the best of the moves available
     }
     
-    // TODO
-    // Implement your helper methods here.
+    // Max node in the Search, gives the max value
+    private int maxValue(CheckersData boardData, int a, int b, int depth){
+    	CheckersMove[] legalMoves = boardData.getLegalMoves(RED);
+    	if(!bothPlayersHavePieces(boardData.board) || legalMoves.length == 0) return utility(boardData.board); // Terminal State, return utility
+    	if(depth >= maxDepth) return evaluateBoard(boardData.board); // Max depth, return heuristic value
+    	int v = Integer.MIN_VALUE;
+    	for (CheckersMove move : legalMoves) { // Evaluate for every move
+            CheckersData newBoardData = new CheckersData();
+            newBoardData.board = copyBoard(this.board.board);
+            newBoardData.makeMove(move); // Perform this initial move
+            v = Math.max(v, minValue(newBoardData, a, b, depth + 1)); // Keep max of recursive MIN calls
+            if(v >= b) return v; // Prune
+            a = Math.max(a, v); // Update alpha if new max is larger
+        }
+        return v; // Return the highest value obtained
+    }
+    
+    // Min node in the Search, gives the min value
+    private int minValue(CheckersData boardData, int a, int b, int depth){
+    	CheckersMove[] legalMoves = boardData.getLegalMoves(BLACK);
+    	if(!bothPlayersHavePieces(boardData.board) || legalMoves.length == 0) return utility(boardData.board); // Terminal State, return utility
+    	if(depth >= maxDepth) return evaluateBoard(boardData.board); // Max depth, return heuristic value
+    	int v = Integer.MAX_VALUE;
+    	for (CheckersMove move : legalMoves) { // Evaluate for every move
+            CheckersData newBoardData = new CheckersData();
+            newBoardData.board = copyBoard(this.board.board);
+            newBoardData.makeMove(move); // Perform this initial move
+            v = Math.min(v, maxValue(newBoardData, a, b, depth + 1)); // Keep max of recursive MIN calls
+            if(v <= a) return v; // Prune
+            b = Math.min(b, v); // Update beta if new min is larger
+        }
+        return v; // Return the smallest value obtained
+    }
 
+    /*
+     * Creates a copy of the inputted board 2D array
+     */
+    private int[][] copyBoard(int[][] original){
+        int[][] copy = new int[original.length][];
+        for (int i = 0; i < original.length; i++) {
+            copy[i] = original[i].clone(); // Deep copy of each row
+        }
+        return copy;
+    }
+    
+    /*
+     * Check if both players still have pieces in the inputed board
+     * Returns true if both players have pieces
+     * returns false otherwise
+     */
+    private boolean bothPlayersHavePieces(int[][] board) {
+    	if(board == null || board.length == 0) throw new RuntimeException("Cannot check terminal status of an empty board");
+    	
+		boolean foundRed = false;
+		boolean foundBlack = false;
+		for(int i = 0; i < board.length; i++) {
+			for(int j = 0; j < board[0].length; j++) {
+				int cur = board[i][j];
+				if(!foundRed && (cur == RED || cur == RED_KING)) { // Found a red piece
+					foundRed = true;
+					if(foundBlack) return true; // Found both, exit early
+				}else if(!foundBlack && (cur == BLACK || cur == BLACK_KING)) { // Found a black piece
+					foundBlack = true;
+					if(foundRed) return true; // Found both, exit early
+				}
+			}
+		}
+		return foundRed && foundBlack; // True if we found pieces for both players
+    }
+    
+    /*
+     * If called, board is assumed to be in a terminal state
+     * Returns utility for the board
+     * 1 if the agent wins
+     * -1 if the agent loses
+     * 0 if there is a draw
+     */
+    private int utility(int[][] board) {
+    	if(bothPlayersHavePieces(board)) { // Terminal but both players have pieces means a draw state
+    		return 0;
+    	}
+    	return evaluateBoard(board);
+    }
+    
+    /*
+     * Heuristic for a Checkers Board configuration
+     * 2 points are given for each regular checkers piece
+     * 3 points are given for each king piece
+     * Positive for the agent (BLACK), negative for the player (RED)
+     * returns score
+     */
+    public int evaluateBoard(int[][] board) {
+		int score = 0;
+		for(int i = 0; i < board.length; i++) {
+			for(int j = 0; j < board[0].length; j++) {
+				int cur = board[i][j];
+				switch(cur) {
+    				case RED: // Regular pieces count as two points
+    					score -= 2;
+    					break;
+    				case BLACK:
+    					score += 2;
+    					break;
+    				case RED_KING: // Kings count as 3 points
+    					score -= 3;
+    					break;
+    				case BLACK_KING:
+    					score += 3;
+    					break;
+				}
+			}
+		}
+		
+		return score;
+	}
 }
