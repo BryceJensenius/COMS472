@@ -152,7 +152,7 @@ public class CheckersData {
      *
      * @param player color of the player, RED or BLACK
      */
-    CheckersMove[] getLegalMoves(int player) {
+    CheckersMove[] getLegalMoves(int player) { // **TODO** I took a screen show of a null pointer exception that came up
         ArrayList<CheckersMove> moves = new ArrayList<>();
         boolean jumpMoveAvailable = false; // Whether any pieces can jump
         for(int row = 0; row < 8; row++) {

@@ -16,11 +16,13 @@ public class MCNode<E>
 
 	E data; // Game Configuration at this node
 	int playouts; // Total playouts from this node
-	int wins; // Number of wins for this player from this node
+	double wins; // Win count for the player of this node
 	int player; // Player who made the move to this node
+	CheckersMove move; // the move performed to get this board;
 	ArrayList<MCNode<E>> children;
-	public MCNode(E data) {
+	public MCNode(E data, int player) {
 		this.data = data;
+		this.player = player;
 		children = new ArrayList<>();
 	}
 

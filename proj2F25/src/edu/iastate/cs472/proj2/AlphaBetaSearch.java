@@ -12,7 +12,7 @@ package edu.iastate.cs472.proj2;
  * move at current state.
 */
 public class AlphaBetaSearch extends AdversarialSearch {
-	int maxDepth = 10; // Max depth or moves to explore before using heuristic
+	int maxDepth = 13; // Max depth or moves to explore before using heuristic
 	
     /**
      * The input parameter legalMoves contains all the possible moves.
@@ -131,15 +131,24 @@ public class AlphaBetaSearch extends AdversarialSearch {
     /*
      * If called, board is assumed to be in a terminal state
      * Returns utility for the board
-     * 1 if the agent wins
-     * -1 if the agent loses
+     * 40 if the agent wins
+     * -40 if the agent loses
      * 0 if there is a draw
+     * evaluateBoard returns value from -39 to 39 so this will always be chosen over a heuristic one
      */
     private int utility(int[][] board) {
-    	if(bothPlayersHavePieces(board)) { // Terminal but both players have pieces means a draw state
-    		return 0;
-    	}
-    	return evaluateBoard(board);
+        if (bothPlayersHavePieces(board)) return 0;
+
+        boolean redAlive = false, blackAlive = false;
+        for (int[] row : board)
+            for (int cell : row) {
+                if (cell == RED || cell == RED_KING) redAlive = true;
+                if (cell == BLACK || cell == BLACK_KING) blackAlive = true;
+            }
+
+        if (blackAlive && !redAlive) return 40;   // Win
+        if (redAlive && !blackAlive) return -40;  // Loss
+        return 0;                                   // Draw
     }
     
     /*
@@ -148,6 +157,7 @@ public class AlphaBetaSearch extends AdversarialSearch {
      * 3 points are given for each king piece
      * Positive for the agent (BLACK), negative for the player (RED)
      * returns score
+     * returns score from -39 to 39
      */
     public int evaluateBoard(int[][] board) {
 		int score = 0;
@@ -170,7 +180,6 @@ public class AlphaBetaSearch extends AdversarialSearch {
 				}
 			}
 		}
-		
-		return score;
+		return Math.max(-39, Math.min(39, score));
 	}
 }

@@ -1,5 +1,7 @@
 package edu.iastate.cs472.proj2;
 
+import java.util.ArrayList;
+
 /**
  * 
  * @author Bryce Jensenius
@@ -8,7 +10,13 @@ package edu.iastate.cs472.proj2;
 
 /**
  * This class implements the Monte Carlo tree search method to find the best
- * move at the current state.
+ * move at the current state using UCB1 formula with C = √2.
+ * 
+ * The algorithm follows these steps:
+ * 1. Selection: Use UCB1 to select best nodes to explore
+ * 2. Expansion: Create child nodes for unexplored moves
+ * 3. Simulation: Randomly play out the game from the expanded node
+ * 4. Backpropagation: Update statistics for nodes on the path from root
  */
 public class MonteCarloTreeSearch extends AdversarialSearch {
 
@@ -25,50 +33,142 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
      *
      * @param legalMoves All the legal moves for the agent at current step.
      */
-    public CheckersMove makeMove(CheckersMove[] legalMoves) {
-        // The checker board state can be obtained from this.board,
-        // which is an 2D array of the following integers defined below:
-    	// 
-        // 0 - empty square,
-        // 1 - red man
-        // 2 - red king
-        // 3 - black man
-        // 4 - black king
-        System.out.println(board);
-        System.out.println();
+    public CheckersMove makeMove(CheckersMove[] legalMoves) { // *TODO* What is the purpose of legal Moves?
+    	// *TODO* do we perform the search for every legal Move, or perform the search to find which is the best to take
+        if (legalMoves == null || legalMoves.length == 0) {
+            return null;
+        }
 
-        // TODO 
+        MCTree<CheckersData> tree = new MCTree<>();
+        tree.root = new MCNode<>(copyBoard(board), BLACK); // Set root as the starting board, BLACK since it is the agents move
+
+        int iterations = 4000; // Number of iterations to perform in MonteCarlo Tree Search
+        for (int i = 0; i < iterations; i++) {
+            ArrayList<MCNode<CheckersData>> path = new ArrayList<>(); // Path taken to be used in back propagation
+            MCNode<CheckersData> selectedNode = selection(tree.root, path); // Select unexpanded node
+            CheckersMove[] curLegalMoves = selectedNode.data.getLegalMoves(selectedNode.player); // Get the legal moves from the selected node
+            MCNode<CheckersData> expandedNode = (curLegalMoves != null) ? expansion(selectedNode, curLegalMoves)
+            		: selectedNode; // Add all the children to MCTree, returning a random one for simulation
+            int result = simulation(expandedNode); // Simulate a random game playout from the selected node, returning the Utility on completion
+            backpropagation(path, result); // Propagate the result up
+        }
         
-        // Return the move for the current state.
-        // Here, we simply return the first legal move for demonstration.
-        return legalMoves[0];
-        // CheckersMove selectedMove = selection(legalMoves);
+        // Choose the best move based on most playouts
+        MCNode<CheckersData> bestChild = null;
+        int maxVisits = -1;
+        for (MCNode<CheckersData> child : tree.root.children) {
+            if (child.playouts > maxVisits) { // Update with highest number of playouts
+                maxVisits = child.playouts;
+                bestChild = child;
+            }
+        }
+        
+        return bestChild.move; // Return the move which led to this best child
     }
     
-    // TODO
-    // 
-    // Implement your helper methods here. They include at least the methods for selection,  
-    // expansion, simulation, and back-propagation. 
-    // 
-    // For representation of the search tree, you are suggested (but limited) to use a 
-    // child-sibling tree already implemented in the two classes CSTree and CSNode (which  
-    // you may feel free to modify).  If you decide not to use the child-sibling tree, simply 
-    // remove these two classes. 
-    private CheckersMove selection(CheckersMove[] legalMoves) {
-    	// Imlement using UCB Formula
+    /*
+     * Traverse through the Monte Carlo Tree, picking the child with the highest UCB value
+     * Returns the first unexpanded node found on this path
+     * Updates path with a list of nodes we took to arrive as the selected node
+     */
+    private MCNode<CheckersData> selection(MCNode<CheckersData> node, ArrayList<MCNode<CheckersData>> path) {
+        path.add(node); // First add the root
         
-        return null;
+        while (!node.children.isEmpty()) { // Traverse until we reach an unexpanded node
+            MCNode<CheckersData> selectedChild = null;
+            double bestUCB = Double.NEGATIVE_INFINITY;
+            
+            for (MCNode<CheckersData> child : node.children) { // Check UCB of every child
+                if (child.playouts == 0) {
+                    path.add(child);
+                    return child; // Select unexpanded nodes first
+                }
+                
+                // UCB formula with C = sqrt(2)
+                double ucb = (child.wins / (double) child.playouts) + // ChildWins / ChildPlayouts
+                           Math.sqrt(2) * Math.sqrt(Math.log(node.playouts) / child.playouts); // sqrt(Log(ParentPlayouts)/ChildPlayouts)
+                if (ucb > bestUCB) { // Update best child if we found a higher UCB value
+                    bestUCB = ucb;
+                    selectedChild = child;
+                }
+            }
+                        
+            node = selectedChild; // Traverse down the tree to the child with the highest UCB value
+            path.add(node); // Add that child to the path we took
+        }
+        
+        return node; // Return the first unexpanded node found while following the path of highest UCB values
     }
     
-    // private CheckersMove[] expansion() {
-    	
-    // }
+    /*
+     * Input of a selected node to expand and the legal moves from that node
+     * Add all the children of the inputed node to the MCTree
+     * Pick one newly added node randomly to return for simulation
+     */
+    private MCNode<CheckersData> expansion(MCNode<CheckersData> node, CheckersMove[] legalMoves) {
+        // Create a new board state for each legal move
+    	int childPlayer = (node.player == RED) ? BLACK : RED; // The opponent to node.player is the child nodes
+        for (CheckersMove move : legalMoves) {
+            CheckersData newBoard = copyBoard(node.data);
+            newBoard.makeMove(move);       
+            MCNode<CheckersData> child = new MCNode<>(newBoard, childPlayer); // Create a new node for this specific move
+            child.move = move; // Set the move which resulted in this child node
+            node.addChild(child); // Add each node for each move to the MCTree
+        }
+        
+        // Return a randomly selected child node
+        if (!node.children.isEmpty()) {
+            return node.children.get((int)(Math.random() * node.children.size())); // Pick a random child for simulation
+        }
+        return node; // No children so return this node for simulation
+    }
     
-    // private CheckersMove simulation() {
-    	
-    // }
-
-    // private CheckersMove back_propagation(){
-    	
-    // }
+    /*
+     * Simulate game play starting from node through taking random moves until reaching a terminal node
+     * Returns the utility at the terminal node for node.player
+     */
+    private int simulation(MCNode<CheckersData> node) { // **TODO** How do we handle draws? Infinite loops?
+        CheckersData currentBoard = copyBoard(node.data);
+        int currentPlayer = node.player;
+        while (true) { // Simulate until terminal condition (Player has no moves)
+            CheckersMove[] legalMoves = currentBoard.getLegalMoves(currentPlayer);
+            if (legalMoves == null || legalMoves.length == 0) { // terminal state, player has no moves to make
+                return (currentPlayer == node.player) ? 0 : 1; // If player with no moves is node.player, this is a loss
+            }
+            
+            // Choose a random move of those available and take it
+            CheckersMove randomMove = legalMoves[(int)(Math.random() * legalMoves.length)];
+            currentBoard.makeMove(randomMove);
+            
+            // Switch players
+            currentPlayer = (currentPlayer == RED || currentPlayer == RED_KING) ? BLACK : RED;
+        }
+    }
+    
+    /*
+     * Path is the nodes we took down the MCTree
+     * Result is 1 if the final node in path is the winner, 0 otherwise
+     */
+    private void backpropagation(ArrayList<MCNode<CheckersData>> path, int result) {
+        for (MCNode<CheckersData> node : path) {
+            node.playouts++; // Increment playouts for every node
+            node.wins += result; // Add result to the players wins
+            result = 1 - result; // Flip the result for the next player (1 becomes 0, 0 becomes 1, 0.5 becomes 0.5)
+        }
+    }
+    
+    /*
+     * Creates a deep copy of the inputed checkers data
+     * Returns a CheckersData Object with the same board configuration
+     */
+    private CheckersData copyBoard(CheckersData sourceBoard){
+    	int[][] original = sourceBoard.board;
+        int[][] copy = new int[original.length][];
+        for (int i = 0; i < original.length; i++) {
+            copy[i] = original[i].clone(); // Deep copy of each row
+        }
+        CheckersData copyBoard = new CheckersData();
+        copyBoard.board = copy;
+        return copyBoard;
+    }
 }

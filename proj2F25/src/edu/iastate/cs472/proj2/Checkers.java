@@ -57,12 +57,6 @@ public class Checkers extends JPanel {
         window.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         window.setResizable(false);
         window.setVisible(true);
-        
-//        while(false) {
-//        	// Get Users move from GUI
-//        	// Update Board with human players move
-//        	// Update board with agents move from the search they are using
-//        }
     }
 
     private JButton newGameButton;  // Button for starting a new game.
