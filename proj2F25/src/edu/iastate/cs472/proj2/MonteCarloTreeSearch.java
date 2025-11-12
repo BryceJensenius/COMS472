@@ -48,7 +48,10 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
             MCNode<CheckersData> selectedNode = selection(tree.root, path); // Select unexpanded node
             CheckersMove[] curLegalMoves = selectedNode.data.getLegalMoves(selectedNode.player); // Get the legal moves from the selected node
             MCNode<CheckersData> expandedNode = (curLegalMoves != null) ? expansion(selectedNode, curLegalMoves)
-            		: selectedNode; // Add all the children to MCTree, returning a random one for simulation
+					: selectedNode; // Add all the children to MCTree, returning a random one for simulation
+            if (expandedNode != selectedNode) { // Could be a leaf node with no children so we don't add it again
+                path.add(expandedNode); // include simulation node in backprop path
+            }
             double result = simulation(expandedNode); // Simulate a random game playout from the selected node, returning the Utility on completion
             backpropagation(path, result); // Propagate the result up
         }
@@ -74,7 +77,7 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
     private MCNode<CheckersData> selection(MCNode<CheckersData> node, ArrayList<MCNode<CheckersData>> path) {
         path.add(node); // First add the root
         
-        while (!node.children.isEmpty()) { // Traverse until we reach an unexpanded node
+        while (!node.children.isEmpty()) { // Traverse until we reach a leaf or an unexpanded child
             MCNode<CheckersData> selectedChild = null;
             double bestUCB = Double.NEGATIVE_INFINITY;
             
@@ -85,8 +88,9 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
                 }
                 
                 // UCB formula with C = sqrt(2)
-                double ucb = (child.wins / (double) child.playouts) + // ChildWins / ChildPlayouts
-                           Math.sqrt(2) * Math.sqrt(Math.log(node.playouts) / child.playouts); // sqrt(Log(ParentPlayouts)/ChildPlayouts)
+                double exploitation = child.wins / (double) child.playouts; // average result for the child
+                double exploration = Math.sqrt(Math.log(Math.max(1, node.playouts)) / child.playouts);
+                double ucb = exploitation + Math.sqrt(2) * exploration;
                 if (ucb > bestUCB) { // Update best child if we found a higher UCB value
                     bestUCB = ucb;
                     selectedChild = child;
@@ -133,19 +137,18 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
         int steps = 150; // Draw after 150 steps to avoid infinite games
         while (steps > 0) { // Simulate until terminal condition (Player has no moves)
             CheckersMove[] legalMoves = currentBoard.getLegalMoves(currentPlayer);
-            if (legalMoves == null || legalMoves.length == 0) { // terminal state, player has no moves to make
-                return (currentPlayer == node.player) ? 0 : 1; // If player with no moves is node.player, this is a loss
+            if (legalMoves == null || legalMoves.length == 0) {
+                // currentPlayer cannot move so they lose and the previous player wins
+                return (currentPlayer == node.player) ? 0.0 : 1.0;
             }
             
             // Choose a random move of those available and take it
             CheckersMove randomMove = legalMoves[(int)(Math.random() * legalMoves.length)];
             currentBoard.makeMove(randomMove);
-            
-            // Switch players
-            currentPlayer = (currentPlayer == RED || currentPlayer == RED_KING) ? BLACK : RED;
+            currentPlayer = (currentPlayer == RED) ? BLACK : RED; // alternate (kings treated by base color)
             steps--;
         }
-        return 0.5; // Draw
+        return 0.5; // draw result
     }
     
     /*
@@ -156,7 +159,7 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
         for (MCNode<CheckersData> node : path) {
             node.playouts++; // Increment playouts for every node
             node.wins += result; // Add result to the players wins
-            result = 1 - result; // Flip the result for the next player (1 becomes 0, 0 becomes 1, 0.5 becomes 0.5)
+            result = (result == 0.5) ? 0.5 : (1.0 - result); // Flip the result for the next player
         }
     }
     
