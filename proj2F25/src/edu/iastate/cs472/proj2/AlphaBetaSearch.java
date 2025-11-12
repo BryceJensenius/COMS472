@@ -48,7 +48,7 @@ public class AlphaBetaSearch extends AdversarialSearch {
             CheckersData newBoardData = new CheckersData();
             newBoardData.board = copyBoard(this.board.board);
             newBoardData.makeMove(move); // Perform this initial move
-            int value = maxValue(newBoardData, alpha, beta, 1); // Recursive MIN call
+            int value = minValue(newBoardData, alpha, beta, 1); // Opponent's turn next (MIN)
             if (value > alpha) { // Keep the largest alpha found
                 alpha = value;
                 bestMove = move;
@@ -60,13 +60,13 @@ public class AlphaBetaSearch extends AdversarialSearch {
     
     // Max node in the Search, gives the max value
     private int maxValue(CheckersData boardData, int a, int b, int depth){
-    	CheckersMove[] legalMoves = boardData.getLegalMoves(RED);
-    	if(!bothPlayersHavePieces(boardData.board) || legalMoves.length == 0) return utility(boardData.board); // Terminal State, return utility
+    	CheckersMove[] legalMoves = boardData.getLegalMoves(BLACK);
+    	if(!bothPlayersHavePieces(boardData.board) || legalMoves == null) return utility(boardData.board); // Terminal State, return utility
     	if(depth >= maxDepth) return evaluateBoard(boardData.board); // Max depth, return heuristic value
     	int v = Integer.MIN_VALUE;
     	for (CheckersMove move : legalMoves) { // Evaluate for every move
             CheckersData newBoardData = new CheckersData();
-            newBoardData.board = copyBoard(this.board.board);
+            newBoardData.board = copyBoard(boardData.board);
             newBoardData.makeMove(move); // Perform this initial move
             v = Math.max(v, minValue(newBoardData, a, b, depth + 1)); // Keep max of recursive MIN calls
             if(v >= b) return v; // Prune
@@ -77,13 +77,13 @@ public class AlphaBetaSearch extends AdversarialSearch {
     
     // Min node in the Search, gives the min value
     private int minValue(CheckersData boardData, int a, int b, int depth){
-    	CheckersMove[] legalMoves = boardData.getLegalMoves(BLACK);
-    	if(!bothPlayersHavePieces(boardData.board) || legalMoves.length == 0) return utility(boardData.board); // Terminal State, return utility
+    	CheckersMove[] legalMoves = boardData.getLegalMoves(RED);
+    	if(!bothPlayersHavePieces(boardData.board) || legalMoves == null) return utility(boardData.board); // Terminal State, return utility
     	if(depth >= maxDepth) return evaluateBoard(boardData.board); // Max depth, return heuristic value
     	int v = Integer.MAX_VALUE;
     	for (CheckersMove move : legalMoves) { // Evaluate for every move
             CheckersData newBoardData = new CheckersData();
-            newBoardData.board = copyBoard(this.board.board);
+            newBoardData.board = copyBoard(boardData.board);
             newBoardData.makeMove(move); // Perform this initial move
             v = Math.min(v, maxValue(newBoardData, a, b, depth + 1)); // Keep max of recursive MIN calls
             if(v <= a) return v; // Prune
@@ -137,7 +137,7 @@ public class AlphaBetaSearch extends AdversarialSearch {
      * evaluateBoard returns value from -39 to 39 so this will always be chosen over a heuristic one
      */
     private int utility(int[][] board) {
-        if (bothPlayersHavePieces(board)) return 0;
+        if (bothPlayersHavePieces(board)) return 0; // **TODO** Winner is the one that can't move or draw?
 
         boolean redAlive = false, blackAlive = false;
         for (int[] row : board)
