@@ -49,7 +49,7 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
             CheckersMove[] curLegalMoves = selectedNode.data.getLegalMoves(selectedNode.player); // Get the legal moves from the selected node
             MCNode<CheckersData> expandedNode = (curLegalMoves != null) ? expansion(selectedNode, curLegalMoves)
             		: selectedNode; // Add all the children to MCTree, returning a random one for simulation
-            int result = simulation(expandedNode); // Simulate a random game playout from the selected node, returning the Utility on completion
+            double result = simulation(expandedNode); // Simulate a random game playout from the selected node, returning the Utility on completion
             backpropagation(path, result); // Propagate the result up
         }
         
@@ -127,10 +127,11 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
      * Simulate game play starting from node through taking random moves until reaching a terminal node
      * Returns the utility at the terminal node for node.player
      */
-    private int simulation(MCNode<CheckersData> node) { // **TODO** How do we handle draws? Infinite loops?
+    private double simulation(MCNode<CheckersData> node) {
         CheckersData currentBoard = copyBoard(node.data);
         int currentPlayer = node.player;
-        while (true) { // Simulate until terminal condition (Player has no moves)
+        int steps = 150; // Draw after 150 steps to avoid infinite games
+        while (steps > 0) { // Simulate until terminal condition (Player has no moves)
             CheckersMove[] legalMoves = currentBoard.getLegalMoves(currentPlayer);
             if (legalMoves == null || legalMoves.length == 0) { // terminal state, player has no moves to make
                 return (currentPlayer == node.player) ? 0 : 1; // If player with no moves is node.player, this is a loss
@@ -142,14 +143,16 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
             
             // Switch players
             currentPlayer = (currentPlayer == RED || currentPlayer == RED_KING) ? BLACK : RED;
+            steps--;
         }
+        return 0.5; // Draw
     }
     
     /*
      * Path is the nodes we took down the MCTree
      * Result is 1 if the final node in path is the winner, 0 otherwise
      */
-    private void backpropagation(ArrayList<MCNode<CheckersData>> path, int result) {
+    private void backpropagation(ArrayList<MCNode<CheckersData>> path, double result) {
         for (MCNode<CheckersData> node : path) {
             node.playouts++; // Increment playouts for every node
             node.wins += result; // Add result to the players wins
