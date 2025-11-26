@@ -19,7 +19,6 @@ import java.util.ArrayList;
  * 4. Backpropagation: Update statistics for nodes on the path from root
  */
 public class MonteCarloTreeSearch extends AdversarialSearch {
-
 	/**
      * The input parameter legalMoves contains all the possible moves.
      * It contains four integers:  fromRow, fromCol, toRow, toCol
@@ -33,14 +32,14 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
      *
      * @param legalMoves All the legal moves for the agent at current step.
      */
-    public CheckersMove makeMove(CheckersMove[] legalMoves) { // *TODO* What is the purpose of legal Moves?
-    	// *TODO* do we perform the search for every legal Move, or perform the search to find which is the best to take
+    public CheckersMove makeMove(CheckersMove[] legalMoves) {
         if (legalMoves == null || legalMoves.length == 0) {
             return null;
         }
 
         MCTree<CheckersData> tree = new MCTree<>();
-        tree.root = new MCNode<>(copyBoard(board), BLACK); // Set root as the starting board, BLACK since it is the agents move
+        // TODO: RED since reds destination or does it not really matter?
+        tree.root = new MCNode<>(copyBoard(board), BLACK); // Set root as the starting board, BLACK since agent is making the move
 
         int iterations = 4000; // Number of iterations to perform in MonteCarlo Tree Search
         for (int i = 0; i < iterations; i++) {
@@ -90,17 +89,16 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
                 // UCB formula with C = sqrt(2)
                 double exploitation = child.wins / (double) child.playouts; // average result for the child
                 double exploration = Math.sqrt(Math.log(Math.max(1, node.playouts)) / child.playouts);
-                double ucb = exploitation + Math.sqrt(2) * exploration;
+                double c = Math.sqrt(2);
+                double ucb = exploitation + c * exploration;
                 if (ucb > bestUCB) { // Update best child if we found a higher UCB value
                     bestUCB = ucb;
                     selectedChild = child;
                 }
             }
-                        
             node = selectedChild; // Traverse down the tree to the child with the highest UCB value
             path.add(node); // Add that child to the path we took
         }
-        
         return node; // Return the first unexpanded node found while following the path of highest UCB values
     }
     
@@ -129,38 +127,37 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
     
     /*
      * Simulate game play starting from node through taking random moves until reaching a terminal node
-     * Returns the utility at the terminal node for node.player
+     * Returns the utility at the terminal node, 0 if agent loses, 1 if agent wins
      */
     private double simulation(MCNode<CheckersData> node) {
         CheckersData currentBoard = copyBoard(node.data);
         int currentPlayer = node.player;
-        int steps = 150; // Draw after 150 steps to avoid infinite games
-        while (steps > 0) { // Simulate until terminal condition (Player has no moves)
+        int steps = 400;
+        while (steps > 0) { // Simulate until terminal condition (Player has no moves) or Max depth
             CheckersMove[] legalMoves = currentBoard.getLegalMoves(currentPlayer);
             if (legalMoves == null || legalMoves.length == 0) {
-                // currentPlayer cannot move so they lose and the previous player wins
-                return (currentPlayer == node.player) ? 0.0 : 1.0;
+                // 
+                return (currentPlayer == RED) ? 0.0 : 1.0;
             }
-            
             // Choose a random move of those available and take it
             CheckersMove randomMove = legalMoves[(int)(Math.random() * legalMoves.length)];
             currentBoard.makeMove(randomMove);
             currentPlayer = (currentPlayer == RED) ? BLACK : RED; // alternate (kings treated by base color)
             steps--;
         }
-        return 0.5; // draw result
+        return 0.5; // draw result, is timeout the only case where we draw on Monte Carlo TODO
     }
     
     /*
      * Path is the nodes we took down the MCTree
-     * Result is 1 if the final node in path is the winner, 0 otherwise
+     * Result is 1 if BLACK (Agent) won, 0 if RED (Player) won, 0.5 for draw
      */
     private void backpropagation(ArrayList<MCNode<CheckersData>> path, double result) {
-        for (MCNode<CheckersData> node : path) {
-            node.playouts++; // Increment playouts for every node
-            node.wins += result; // Add result to the players wins
-            result = (result == 0.5) ? 0.5 : (1.0 - result); // Flip the result for the next player
-        }
+    	for(int i = path.size() - 1; i >= 0; i--) { // Back propagate in reverse order
+    		MCNode<CheckersData> curNode = path.get(i);
+    		curNode.playouts++; // Increment playouts for every node
+    		curNode.wins += (curNode.player == BLACK) ? result : 1 - result; // Add the result to agent, opposite for other player
+    	}
     }
     
     /*

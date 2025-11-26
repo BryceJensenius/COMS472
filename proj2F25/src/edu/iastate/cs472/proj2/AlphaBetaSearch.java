@@ -52,7 +52,6 @@ public class AlphaBetaSearch extends AdversarialSearch {
             if (value > alpha) { // Keep the largest alpha found
                 alpha = value;
                 bestMove = move;
-                System.out.println("Alpha " + alpha);
             }
         }
         return bestMove; // Return the best of the moves available
@@ -148,7 +147,7 @@ public class AlphaBetaSearch extends AdversarialSearch {
 
         if (blackAlive && !redAlive) return 40;   // Win
         if (redAlive && !blackAlive) return -40;  // Loss
-        return 0;                                   // Draw
+        return 0;                                 // Draw
     }
     
     /*
