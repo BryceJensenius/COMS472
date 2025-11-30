@@ -14,6 +14,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.Random;
 
 /**
+ * 
+ * @author Bryce Jensenius
+ *
+ */
+
+/**
  * This panel lets two users play checkers against each other.
  * Red always starts the game.  If a player can jump an opponent's
  * piece, then the player must jump.  When a player can make no more

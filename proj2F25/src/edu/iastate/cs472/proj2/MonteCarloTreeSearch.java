@@ -38,7 +38,6 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
         }
 
         MCTree<CheckersData> tree = new MCTree<>();
-        // TODO: RED since reds destination or does it not really matter?
         tree.root = new MCNode<>(copyBoard(board), BLACK); // Set root as the starting board, BLACK since agent is making the move
 
         int iterations = 4000; // Number of iterations to perform in MonteCarlo Tree Search
@@ -145,7 +144,7 @@ public class MonteCarloTreeSearch extends AdversarialSearch {
             currentPlayer = (currentPlayer == RED) ? BLACK : RED; // alternate (kings treated by base color)
             steps--;
         }
-        return 0.5; // draw result, is timeout the only case where we draw on Monte Carlo TODO
+        return 0.5; // draw result when we hit max steps
     }
     
     /*

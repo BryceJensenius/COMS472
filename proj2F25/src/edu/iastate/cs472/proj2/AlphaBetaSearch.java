@@ -57,7 +57,16 @@ public class AlphaBetaSearch extends AdversarialSearch {
         return bestMove; // Return the best of the moves available
     }
     
-    // Max node in the Search, gives the max value
+    /*
+        Max node in the Search, gives the max value. Implements alpha-beta pruning.
+        If at a terminal state, return utility. If at max depth, return heuristic value.
+        @param boardData Current board configuration
+        @param a Current alpha value
+        @param b Current beta value
+        @param depth Current depth in the search tree
+        @return max value found from this node
+    */
+
     private int maxValue(CheckersData boardData, int a, int b, int depth){
     	CheckersMove[] legalMoves = boardData.getLegalMoves(BLACK);
     	if(!bothPlayersHavePieces(boardData.board) || legalMoves == null) return utility(boardData.board); // Terminal State, return utility
@@ -74,7 +83,16 @@ public class AlphaBetaSearch extends AdversarialSearch {
         return v; // Return the highest value obtained
     }
     
-    // Min node in the Search, gives the min value
+    /*
+        Min node in the Search, gives the min value of its children
+        or of the available moves. If at a terminal state, return utility.
+        If at max depth, return heuristic value.
+        @param boardData Current board configuration
+        @param a Current alpha value
+        @param b Current beta value
+        @param depth Current depth in the search tree
+        @return min value found from this node
+    */
     private int minValue(CheckersData boardData, int a, int b, int depth){
     	CheckersMove[] legalMoves = boardData.getLegalMoves(RED);
     	if(!bothPlayersHavePieces(boardData.board) || legalMoves == null) return utility(boardData.board); // Terminal State, return utility
@@ -136,7 +154,7 @@ public class AlphaBetaSearch extends AdversarialSearch {
      * evaluateBoard returns value from -39 to 39 so this will always be chosen over a heuristic one
      */
     private int utility(int[][] board) {
-        if (bothPlayersHavePieces(board)) return 0; // **TODO** Winner is the one that can't move or draw?
+        if (bothPlayersHavePieces(board)) return 0; // Terminal state but both players have pieces, must be a draw
 
         boolean redAlive = false, blackAlive = false;
         for (int[] row : board)

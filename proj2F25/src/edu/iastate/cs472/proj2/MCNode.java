@@ -1,6 +1,11 @@
 package edu.iastate.cs472.proj2;
 
 import java.util.ArrayList;
+/**
+ * 
+ * @author Bryce Jensenius
+ *
+ */
 
 /**
  * Node type for the Monte Carlo search tree.
